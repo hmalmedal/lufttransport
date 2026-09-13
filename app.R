@@ -3,19 +3,16 @@ library(ggplot2)
 source("R/ssb.R", encoding = "UTF-8")
 
 ui <- fluidPage(
-  tags$head(tags$style(HTML("
-    body { background: #f3f6fa; color: #183047; }
-    .container-fluid { max-width: 1450px; padding: 24px; }
-    h1 { font-weight: 750; letter-spacing: -1px; }
-    .well { background: white; border: 1px solid #dce4ed; border-radius: 12px; }
-    .tab-content { background: white; padding: 20px; border-radius: 0 0 12px 12px; }
-    .btn-primary { background: #126678; border-color: #126678; }
-    .intro { color: #53697d; margin-bottom: 24px; font-size: 17px; }
-  "))),
-  titlePanel("Flytrafikk i Norge"),
-  p(class = "intro", "Sammenlign passasjerutviklingen ved norske flyplasser · SSB tabell 08507"),
+  tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")),
+  title = "Flytrafikk i Norge",
+  tags$header(class = "app-header",
+    div(class = "eyebrow", "LUFTTRANSPORT / SSB 08507"),
+    h1("Flytrafikk i Norge"),
+    p(class = "intro", "Sammenlign passasjerutviklingen ved norske flyplasser over tid.")
+  ),
   sidebarLayout(
     sidebarPanel(width = 3,
+      h2(class = "section-title", "Velg trafikk"),
       actionButton("metadata_refresh", "Oppdater flyplasser og perioder"),
       uiOutput("filters"),
       actionButton("fetch", "Hent passasjertall", class = "btn-primary"),
@@ -27,10 +24,11 @@ ui <- fluidPage(
       downloadButton("download", "Last ned viste data (CSV)")
     ),
     mainPanel(width = 9,
-      textOutput("status"),
+      div(class = "status-panel", role = "status", textOutput("status")),
       tabsetPanel(
         tabPanel("Utvikling", plotOutput("plot", height = "510px"), textOutput("explanation")),
-        tabPanel("Datatabell", p("Manglende observasjoner vises som NA."), tableOutput("table")),
+        tabPanel("Datatabell", p("Manglende observasjoner vises som NA."),
+          div(class = "table-scroll", tableOutput("table"))),
         tabPanel("Om tallene",
           h3("Hva sammenlignes?"),
           p("Tabellen måler passasjerer, ikke antall flybevegelser eller unike reisende. ",
