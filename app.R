@@ -124,14 +124,21 @@ server <- function(input, output, session) {
   output$plot <- renderPlot({
     d <- displayed()
     validate(need(any(is.finite(d$Verdi)), "Ingen beregnbare verdier for valget. Prøv en annen periode eller visning."))
-    ggplot(d, aes(Dato, Verdi, colour = Flyplass, group = Flyplass)) +
-      geom_line(linewidth = 0.85, na.rm = TRUE) + geom_point(size = 1, na.rm = TRUE) +
+    if (input$mode == "yoy") {
+      plot <- ggplot(d, aes(Dato, Verdi, fill = Flyplass, group = Flyplass)) +
+        geom_hline(yintercept = 0, colour = "#536878", linewidth = 0.4) +
+        geom_col(width = 25, position = position_dodge(width = 25), na.rm = TRUE)
+    } else {
+      plot <- ggplot(d, aes(Dato, Verdi, colour = Flyplass, group = Flyplass)) +
+        geom_line(linewidth = 0.85, na.rm = TRUE) + geom_point(size = 1, na.rm = TRUE)
+    }
+    plot +
       scale_y_continuous(labels = scales::label_number(big.mark = " ", decimal.mark = ",")) +
       scale_x_date(date_labels = "%Y-%m") +
-      labs(x = NULL, y = axis_title(), colour = NULL) +
+      labs(x = NULL, y = axis_title(), colour = NULL, fill = NULL) +
       theme_minimal(base_size = 13) + theme(legend.position = "bottom",
         panel.grid.minor = element_blank(), legend.text = element_text(size = 10)) +
-      guides(colour = guide_legend(ncol = 2))
+      guides(colour = guide_legend(ncol = 2), fill = guide_legend(ncol = 2))
   })
   output$explanation <- renderText({
     d <- displayed()
