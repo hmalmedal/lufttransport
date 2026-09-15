@@ -34,6 +34,22 @@ stopifnot(all(is.na(ma$Verdi[1:11])),
 stopifnot(is.na(rolling_sum(rolling[-6, ])$Verdi[11]))
 rolling$Passasjerer[6] <- NA_real_
 stopifnot(all(is.na(rolling_sum(rolling)$Verdi[12:14])))
+comparison <- data.frame(Flyplass = rep(c("A", "B"), each = 25),
+  Dato = rep(seq(as.Date("2022-01-01"), by = "month", length.out = 25), 2),
+  Passasjerer = c(rep(100, 12), rep(125, 13), rep(100, 12), rep(80, 13)))
+change <- function(x, start = "2022-01-01") {
+  traffic_series(x, as.Date(start), as.Date("2024-01-01"), "change12")
+}
+result <- change(comparison)
+stopifnot(all(is.na(result$Verdi[1:23])),
+  isTRUE(all.equal(result$Verdi[c(24, 49)], c(25, -20))),
+  isTRUE(all.equal(change(comparison, "2023-12-01")$Verdi,
+    result$Verdi[c(24, 25, 49, 50)])))
+stopifnot(is.na(change(comparison[-6, ])$Verdi[23]))
+comparison$Passasjerer[6] <- NA_real_
+stopifnot(is.na(change(comparison)$Verdi[24]))
+comparison$Passasjerer[1:12] <- 0
+stopifnot(is.na(change(comparison)$Verdi[24]))
 if (identical(Sys.getenv("TEST_SSB_LIVE"), "true")) {
   m <- ssb_metadata()
   live <- ssb_fetch(m, c("ENGM", "ENBR"), "000", "IU", "AAT")

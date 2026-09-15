@@ -30,6 +30,8 @@ Tallene er ikke sesongjustert og måler ikke unike reisende. Manglende verdier b
 
 ## Kontroller
 
+**Rullerende 12-måneders endring (%)** viser `100 × (sum siste 12 måneder / sum foregående 12 måneder − 1)`, separat for hver flyplass. Inneværende måned inngår i siste periode. Beregningen krever tall for alle 24 måneder og positiv sammenligningssum; ellers vises NA. Historikk før valgt visningsperiode brukes også her.
+
 Visningen **12 måneders glidende sum** summerer passasjertallene i inneværende måned og de elleve foregående månedene, separat for hver flyplass. Alle tolv kalendermåneder må ha tall. Historikk før valgt visningsperiode inngår i beregningen, og manglende grunnlag vises som NA.
 
 ```r
