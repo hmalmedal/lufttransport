@@ -30,7 +30,7 @@ Tallene er ikke sesongjustert og måler ikke unike reisende. Manglende verdier b
 
 ## Kontroller
 
-Visningen **12 måneders glidende gjennomsnitt** beregner gjennomsnittet av inneværende måned og de elleve foregående månedene, separat for hver flyplass. Alle tolv kalendermåneder må ha tall. Historikk før valgt visningsperiode inngår i beregningen, og manglende grunnlag vises som NA.
+Visningen **12 måneders glidende sum** summerer passasjertallene i inneværende måned og de elleve foregående månedene, separat for hver flyplass. Alle tolv kalendermåneder må ha tall. Historikk før valgt visningsperiode inngår i beregningen, og manglende grunnlag vises som NA.
 
 ```r
 source("tests/check.R", encoding = "UTF-8")

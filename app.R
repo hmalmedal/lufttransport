@@ -20,7 +20,7 @@ ui <- fluidPage(
       radioButtons("mode", "Sammenlign med", c("Antall passasjerer" = "count",
         "Indeks: første valgte måned = 100" = "index",
         "Endring fra samme måned året før (%)" = "yoy",
-        "12 måneders glidende gjennomsnitt" = "ma12")),
+        "12 måneders glidende sum" = "sum12")),
       uiOutput("period"),
       downloadButton("download", "Last ned viste data (CSV)")
     ),
@@ -37,7 +37,7 @@ ui <- fluidPage(
           p("En innenlandsreise kan telles ved begge flyplassene. Tallene bør derfor ikke summeres til antall unike reisende."),
           p("Indeksen bruker samme startmåned for alle flyplasser. Serier med null eller manglende verdi i startmåneden får ingen indeks. ",
             "Årsendringen sammenligner hver måned med samme måned året før; null eller manglende sammenligningsgrunnlag gir NA."),
-          p("12 måneders glidende gjennomsnitt er gjennomsnittlig antall passasjerer i inneværende måned og de elleve foregående månedene. ",
+          p("12 måneders glidende sum er samlet antall passasjerer i inneværende måned og de elleve foregående månedene. ",
             "Alle tolv måneder må ha tall; ellers vises NA. Beregningen bruker også måneder før valgt visningsperiode."),
           p("Tallene er ikke sesongjustert. Manglende verdier beholdes som NA, og kurvene brytes ved hull. ",
             "Historiske tall kan bli revidert. Klikk Hent passasjertall for å hente på nytt."),
@@ -120,7 +120,7 @@ server <- function(input, output, session) {
     traffic_series(loaded()$data, start, end, input$mode)
   })
   axis_title <- reactive(switch(input$mode, count = "Passasjerer", index = "Indeks (startmåned = 100)",
-    yoy = "Endring fra året før (%)", ma12 = "Passasjerer (12 måneders gjennomsnitt)"))
+    yoy = "Endring fra året før (%)", sum12 = "Passasjerer (12 måneders sum)"))
   output$plot <- renderPlot({
     d <- displayed()
     validate(need(any(is.finite(d$Verdi)), "Ingen beregnbare verdier for valget. Prøv en annen periode eller visning."))
@@ -145,7 +145,7 @@ server <- function(input, output, session) {
     paste(switch(input$mode, count = "Månedlige passasjertall, uten sesongjustering.",
       index = paste("Felles basis:", format(as.Date(input$start), "%Y-%m"), "= 100."),
       yoy = "Prosentvis endring fra samme måned året før.",
-      ma12 = "Gjennomsnitt av inneværende måned og de elleve foregående. Krever tall for alle tolv måneder."),
+      sum12 = "Sum av inneværende måned og de elleve foregående. Krever tall for alle tolv måneder."),
       sum(is.na(d$Verdi)), "observasjoner mangler eller kan ikke beregnes.")
   })
   output$table <- renderTable({

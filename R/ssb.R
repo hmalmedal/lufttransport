@@ -59,7 +59,7 @@ ssb_fetch <- function(metadata, airports, traffic, route, passengers) {
 traffic_series <- function(data, start, end, mode) {
   result <- data
   result$Verdi <- result$Passasjerer
-  if (mode == "ma12") {
+  if (mode == "sum12") {
     # Beregn før periodefilteret, med tolv sammenhengende kalendermåneder.
     month <- as.integer(format(result$Dato, "%Y")) * 12L +
       as.integer(format(result$Dato, "%m"))
@@ -67,7 +67,7 @@ traffic_series <- function(data, start, end, mode) {
     result$Verdi <- vapply(seq_len(nrow(result)), function(i) {
       window <- result$Passasjerer[match(
         paste(result$Flyplass[i], month[i] - 0:11), key)]
-      if (anyNA(window)) NA_real_ else mean(window)
+      if (anyNA(window)) NA_real_ else sum(window)
     }, numeric(1))
   }
   if (mode == "yoy") {

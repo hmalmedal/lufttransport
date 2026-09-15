@@ -22,18 +22,18 @@ stopifnot(identical(month_date("2024M02"), as.Date("2024-02-01")))
 rolling <- data.frame(Flyplass = rep(c("A", "B"), each = 14),
   Dato = rep(seq(as.Date("2023-01-01"), by = "month", length.out = 14), 2),
   Passasjerer = c(0:13, rep(100, 14)))
-average <- function(x, start = "2023-01-01") {
-  traffic_series(x, as.Date(start), as.Date("2024-02-01"), "ma12")
+rolling_sum <- function(x, start = "2023-01-01") {
+  traffic_series(x, as.Date(start), as.Date("2024-02-01"), "sum12")
 }
-ma <- average(rolling)
+ma <- rolling_sum(rolling)
 stopifnot(all(is.na(ma$Verdi[1:11])),
-  identical(ma$Verdi[12:14], c(5.5, 6.5, 7.5)),
-  identical(ma$Verdi[26:28], rep(100, 3)),
-  identical(average(rolling, "2024-01-01")$Verdi, c(6.5, 7.5, 100, 100)))
+  identical(ma$Verdi[12:14], c(66, 78, 90)),
+  identical(ma$Verdi[26:28], rep(1200, 3)),
+  identical(rolling_sum(rolling, "2024-01-01")$Verdi, c(78, 90, 1200, 1200)))
 # Hull og eksplisitt NA skal begge hindre beregning, uten å blande flyplasser.
-stopifnot(is.na(average(rolling[-6, ])$Verdi[11]))
+stopifnot(is.na(rolling_sum(rolling[-6, ])$Verdi[11]))
 rolling$Passasjerer[6] <- NA_real_
-stopifnot(all(is.na(average(rolling)$Verdi[12:14])))
+stopifnot(all(is.na(rolling_sum(rolling)$Verdi[12:14])))
 if (identical(Sys.getenv("TEST_SSB_LIVE"), "true")) {
   m <- ssb_metadata()
   live <- ssb_fetch(m, c("ENGM", "ENBR"), "000", "IU", "AAT")
