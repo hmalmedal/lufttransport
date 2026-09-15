@@ -22,7 +22,9 @@ Velg flyplasser og trafikkavgrensning, og trykk **Hent passasjertall**. Velg der
 
 Appen trenger internettilgang til `https://data.ssb.no`. Metadata hentes ved oppstart og kan oppdateres med egen knapp. Passasjertall hentes ved knappetrykk og holdes i minnet per økt. Endring av periode eller visning utløser ikke nye API-kall. Hele tidsserien hentes for valgte flyplasser, slik at årsvekst også kan beregnes ved starten av visningsperioden.
 
-`httr` sender en eksplisitt POST-spørring med én kategori per trafikkdimensjon. `rjstat::fromJSONstat()` konverterer JSON-stat2-svaret til en dataramme. Flyplassvalg og tilgjengelige måneder leses fra SSBs metadata.
+Appen bruker [PxWebApi v2](https://www.ssb.no/api/pxwebapiv2). Metadata hentes med GET fra `https://data.ssb.no/api/pxwebapi/v2/tables/08507/metadata?lang=no`. JSON-stat2-dimensjonene omformes til flyplassvalg, kategorier og tilgjengelige måneder i appen.
+
+`httr` sender POST til `https://data.ssb.no/api/pxwebapi/v2/tables/08507/data?lang=no&outputFormat=json-stat2`, med `selection`, `variableCode` og `valueCodes` i forespørselen. Alle dimensjoner velges eksplisitt, med én kategori per trafikkdimensjon. `rjstat::fromJSONstat()` konverterer JSON-stat2-svaret til en dataramme.
 
 Tallene er ikke sesongjustert og måler ikke unike reisende. Manglende verdier blir ikke erstattet med null. Indeksen krever en positiv verdi i felles startmåned; årsvekst krever en positiv verdi i samme måned året før.
 

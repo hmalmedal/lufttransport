@@ -1,9 +1,24 @@
-ssb_url <- "https://data.ssb.no/api/v0/no/table/08507"
+ssb_url <- "https://data.ssb.no/api/pxwebapi/v2/tables/08507"
+
+ssb_normalize_metadata <- function(raw) {
+  # JSON-stat2 har koder og etiketter i dimension/category.
+  # Sorter etter indeksverdiene, ikke rekkefølgen på JSON-objektnøklene.
+  variables <- lapply(unlist(raw$id), function(code) {
+    dimension <- raw$dimension[[code]]
+    index <- unlist(dimension$category$index)
+    values <- if (is.null(names(index))) index else names(index)[order(index)]
+    labels <- unlist(dimension$category$label)[values]
+    list(code = code, text = dimension$label, values = unname(values),
+      valueTexts = unname(labels))
+  })
+  list(title = raw$label, variables = variables)
+}
 
 ssb_metadata <- function() {
-  response <- httr::GET(ssb_url, httr::timeout(45))
+  response <- httr::GET(paste0(ssb_url, "/metadata"),
+    query = list(lang = "no"), httr::timeout(45))
   httr::stop_for_status(response, "hente metadata fra SSB")
-  httr::content(response, as = "parsed", encoding = "UTF-8")
+  ssb_normalize_metadata(httr::content(response, as = "parsed", encoding = "UTF-8"))
 }
 
 ssb_variable <- function(metadata, code) {
@@ -24,10 +39,11 @@ ssb_fetch <- function(metadata, airports, traffic, route, passengers) {
     Tid = unlist(ssb_variable(metadata, "Tid")$values)
   )
   query <- lapply(names(selections), function(code) {
-    list(code = code, selection = list(filter = "item", values = unname(as.list(selections[[code]]))))
+    list(variableCode = code, valueCodes = unname(as.list(selections[[code]])))
   })
-  response <- httr::POST(ssb_url, body = list(query = query,
-    response = list(format = "json-stat2")), encode = "json", httr::timeout(90))
+  response <- httr::POST(paste0(ssb_url, "/data"),
+    query = list(lang = "no", outputFormat = "json-stat2"),
+    body = list(selection = query), encode = "json", httr::timeout(90))
   httr::stop_for_status(response, "hente passasjertall fra SSB")
   # Behold dimensjonskodene slik at endrede etiketter ikke knekker appen.
   raw <- rjstat::fromJSONstat(httr::content(response, as = "text", encoding = "UTF-8"), naming = "id")

@@ -1,4 +1,14 @@
 source("R/ssb.R", encoding = "UTF-8")
+# JSON-objektnøkler kan komme i annen rekkefølge enn kategoriindeksen.
+metadata_fixture <- list(label = "Test", id = list("Lufthavn"), dimension = list(
+  Lufthavn = list(label = "Flyplass", category = list(
+    index = list(ENBR = 1L, ENGM = 0L),
+    label = list(ENBR = "Bergen", ENGM = "Oslo")))))
+stopifnot(identical(ssb_choices(ssb_normalize_metadata(metadata_fixture), "Lufthavn"),
+  c(Oslo = "ENGM", Bergen = "ENBR")))
+metadata_fixture$dimension$Lufthavn$category$index <- list("ENGM", "ENBR")
+stopifnot(identical(ssb_choices(ssb_normalize_metadata(metadata_fixture), "Lufthavn"),
+  c(Oslo = "ENGM", Bergen = "ENBR")))
 d <- data.frame(Flyplass = c("A", "A", "A", "B", "B"),
   Dato = as.Date(c("2023-01-01", "2024-01-01", "2024-03-01", "2023-01-01", "2024-01-01")),
   Passasjerer = c(100, 125, NA, 0, 50))
