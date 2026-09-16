@@ -1,4 +1,4 @@
-ssb_url <- "https://data.ssb.no/api/pxwebapi/v2/tables/08507"
+ssb_url <- "https://data.ssb.no/api/pxwebapi/v2/tables/08507/"
 
 ssb_normalize_metadata <- function(raw) {
   # JSON-stat2 har koder og etiketter i dimension/category.
@@ -15,10 +15,13 @@ ssb_normalize_metadata <- function(raw) {
 }
 
 ssb_metadata <- function() {
-  response <- httr::GET(paste0(ssb_url, "/metadata"),
-    query = list(lang = "no"), httr::timeout(45))
-  httr::stop_for_status(response, "hente metadata fra SSB")
-  ssb_normalize_metadata(httr::content(response, as = "parsed", encoding = "UTF-8"))
+  httr2::url_modify_relative(ssb_url, "metadata") |>
+    httr2::request() |>
+    httr2::req_url_query(lang = "no") |>
+    httr2::req_timeout(45) |>
+    httr2::req_perform() |>
+    httr2::resp_body_json(simplifyVector = FALSE) |>
+    ssb_normalize_metadata()
 }
 
 ssb_variable <- function(metadata, code) {
@@ -41,12 +44,16 @@ ssb_fetch <- function(metadata, airports, traffic, route, passengers) {
   query <- selections |>
     purrr::imap(~ list(variableCode = .y, valueCodes = unname(as.list(.x)))) |>
     unname()
-  response <- httr::POST(paste0(ssb_url, "/data"),
-    query = list(lang = "no", outputFormat = "json-stat2"),
-    body = list(selection = query), encode = "json", httr::timeout(90))
-  httr::stop_for_status(response, "hente passasjertall fra SSB")
+  response <- httr2::url_modify_relative(ssb_url, "data") |>
+    httr2::request() |>
+    httr2::req_url_query(lang = "no", outputFormat = "json-stat2") |>
+    httr2::req_body_json(list(selection = query)) |>
+    httr2::req_timeout(90) |>
+    httr2::req_perform()
   # Behold dimensjonskodene slik at endrede etiketter ikke knekker appen.
-  raw <- rjstat::fromJSONstat(httr::content(response, as = "text", encoding = "UTF-8"), naming = "id")
+  raw <- response |>
+    httr2::resp_body_string(encoding = "UTF-8") |>
+    rjstat::fromJSONstat(naming = "id")
   stopifnot(all(c("Lufthavn", "Tid", "value") %in% names(raw)))
   choices <- ssb_choices(metadata, "Lufthavn")
   airports <- tibble::enframe(choices, name = "Flyplass", value = "Lufthavn")

@@ -7,7 +7,7 @@ Shiny-app for sammenligning av månedlige passasjertall fra [SSB tabell 08507](h
 Åpne `lufttransport.Rproj` i RStudio. Installer pakkene én gang:
 
 ```r
-install.packages(c("shiny", "rjstat", "httr", "ggplot2", "scales",
+install.packages(c("shiny", "rjstat", "httr2", "ggplot2", "scales",
                    "dplyr", "tidyr", "purrr", "tibble"))
 ```
 
@@ -25,7 +25,7 @@ Appen trenger internettilgang til `https://data.ssb.no`. Metadata hentes ved opp
 
 Appen bruker [PxWebApi v2](https://www.ssb.no/api/pxwebapiv2). Metadata hentes med GET fra `https://data.ssb.no/api/pxwebapi/v2/tables/08507/metadata?lang=no`. JSON-stat2-dimensjonene omformes til flyplassvalg, kategorier og tilgjengelige måneder i appen.
 
-`httr` sender POST til `https://data.ssb.no/api/pxwebapi/v2/tables/08507/data?lang=no&outputFormat=json-stat2`, med `selection`, `variableCode` og `valueCodes` i forespørselen. Alle dimensjoner velges eksplisitt, med én kategori per trafikkdimensjon. `rjstat::fromJSONstat()` konverterer JSON-stat2-svaret til en dataramme.
+`httr2` sender POST til `https://data.ssb.no/api/pxwebapi/v2/tables/08507/data?lang=no&outputFormat=json-stat2`, med `selection`, `variableCode` og `valueCodes` i forespørselen. Alle dimensjoner velges eksplisitt, med én kategori per trafikkdimensjon. `rjstat::fromJSONstat()` konverterer JSON-stat2-svaret til en dataramme.
 
 Tallene er ikke sesongjustert og måler ikke unike reisende. Manglende verdier blir ikke erstattet med null. Indeksen krever en positiv verdi i felles startmåned; årsvekst krever en positiv verdi i samme måned året før.
 
