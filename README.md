@@ -8,7 +8,7 @@ Shiny-app for sammenligning av månedlige passasjertall fra [SSB tabell 08507](h
 
 ```r
 install.packages(c("shiny", "rjstat", "httr2", "ggplot2", "scales",
-                   "dplyr", "tidyr", "purrr", "tibble"))
+                   "dplyr", "tidyr", "purrr", "tibble", "readr"))
 ```
 
 Start fra prosjektmappen:

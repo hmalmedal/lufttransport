@@ -166,7 +166,7 @@ server <- function(input, output, session) {
       d$Utvalg <- loaded()$description
       d$Kilde <- "SSB tabell 08507"
       d$Hentet <- format(loaded()$time, "%Y-%m-%d %H:%M:%S")
-      write.csv2(d, file, row.names = FALSE, fileEncoding = "UTF-8", na = "NA")
+      readr::write_excel_csv2(d, file, na = "NA")
     }
   )
 }
