@@ -7,7 +7,8 @@ Shiny-app for sammenligning av månedlige passasjertall fra [SSB tabell 08507](h
 Åpne `lufttransport.Rproj` i RStudio. Installer pakkene én gang:
 
 ```r
-install.packages(c("shiny", "rjstat", "httr", "ggplot2", "scales"))
+install.packages(c("shiny", "rjstat", "httr", "ggplot2", "scales",
+                   "dplyr", "tidyr", "purrr", "tibble"))
 ```
 
 Start fra prosjektmappen:
