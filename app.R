@@ -18,7 +18,6 @@ ui <- fluidPage(
       actionButton("fetch", "Hent passasjertall", class = "btn-primary"),
       hr(),
       radioButtons("mode", "Sammenlign med", c("Antall passasjerer" = "count",
-        "Indeks: første valgte måned = 100" = "index",
         "Endring fra samme måned året før (%)" = "yoy",
         "12 måneders glidende sum" = "sum12",
         "Rullerende 12-måneders endring (%)" = "change12")),
@@ -36,8 +35,7 @@ ui <- fluidPage(
           p("Tabellen måler passasjerer, ikke antall flybevegelser eller unike reisende. ",
             "Standardvalget er all kommersiell flyging, innenlands og utenlands, med passasjerer ved både avgang og ankomst."),
           p("En innenlandsreise kan telles ved begge flyplassene. Tallene bør derfor ikke summeres til antall unike reisende."),
-          p("Indeksen bruker samme startmåned for alle flyplasser. Serier med null eller manglende verdi i startmåneden får ingen indeks. ",
-            "Årsendringen sammenligner hver måned med samme måned året før; null eller manglende sammenligningsgrunnlag gir NA."),
+          p("Årsendringen sammenligner hver måned med samme måned året før; null eller manglende sammenligningsgrunnlag gir NA."),
           p("12 måneders glidende sum er samlet antall passasjerer i inneværende måned og de elleve foregående månedene. ",
             "Alle tolv måneder må ha tall; ellers vises NA. Beregningen bruker også måneder før valgt visningsperiode."),
           p("Rullerende 12-måneders endring sammenligner summen for de siste tolv månedene med summen for de foregående tolv månedene, i prosent. ",
@@ -122,7 +120,7 @@ server <- function(input, output, session) {
     validate(need(start <= end, "Fra måned må være før eller lik til måned."))
     traffic_series(loaded()$data, start, end, input$mode)
   })
-  axis_title <- reactive(switch(input$mode, count = "Passasjerer", index = "Indeks (startmåned = 100)",
+  axis_title <- reactive(switch(input$mode, count = "Passasjerer",
     yoy = "Endring fra året før (%)", sum12 = "Passasjerer (12 måneders sum)",
     change12 = "Rullerende 12-måneders endring (%)"))
   output$plot <- renderPlot({
@@ -147,7 +145,6 @@ server <- function(input, output, session) {
   output$explanation <- renderText({
     d <- displayed()
     paste(switch(input$mode, count = "Månedlige passasjertall, uten sesongjustering.",
-      index = paste("Felles basis:", format(as.Date(input$start), "%Y-%m"), "= 100."),
       yoy = "Prosentvis endring fra samme måned året før.",
       sum12 = "Sum av inneværende måned og de elleve foregående. Krever tall for alle tolv måneder.",
       change12 = "Prosentvis endring i summen for de siste 12 månedene mot de foregående 12 månedene. Krever 24 måneder med tall og positiv sammenligningssum."),

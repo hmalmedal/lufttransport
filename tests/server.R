@@ -13,8 +13,6 @@ shiny::testServer(server, {
   session$setInputs(fetch = 1)
   session$setInputs(start = "2023-01-01", end = "2024-01-01")
   stopifnot(nrow(displayed()) == 4, !is.null(output$plot))
-  session$setInputs(mode = "index")
-  stopifnot(isTRUE(all.equal(displayed()$Verdi, c(100, 120, 100, 125))))
   session$setInputs(mode = "yoy", start = "2024-01-01")
   stopifnot(isTRUE(all.equal(displayed()$Verdi, c(20, 25))))
   session$setInputs(airports = "ENGM")

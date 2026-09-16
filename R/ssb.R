@@ -85,11 +85,6 @@ traffic_series <- function(data, start, end, mode) {
       dplyr::mutate(.base = dplyr::lag(Verdi, 12),
         Verdi = dplyr::if_else(.base > 0, 100 * (Verdi / .base - 1), NA_real_))
   }
-  if (mode == "index") {
-    result <- result |>
-      dplyr::mutate(.base = dplyr::first(Verdi[Dato == start], default = NA_real_),
-        Verdi = dplyr::if_else(.base > 0, 100 * Verdi / .base, NA_real_))
-  }
   result |>
     dplyr::ungroup() |>
     dplyr::filter(!is.na(.row), dplyr::between(Dato, start, end)) |>

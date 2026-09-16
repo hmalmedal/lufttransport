@@ -14,10 +14,6 @@ d <- data.frame(Flyplass = c("A", "A", "A", "B", "B"),
   Passasjerer = c(100, 125, NA, 0, 50))
 yoy <- traffic_series(d, as.Date("2024-01-01"), as.Date("2024-03-01"), "yoy")
 stopifnot(identical(yoy$Verdi, c(25, NA_real_, NA_real_)))
-idx <- traffic_series(d, as.Date("2023-01-01"), as.Date("2024-03-01"), "index")
-stopifnot(identical(idx$Verdi, c(100, 125, NA_real_, NA_real_, NA_real_)))
-missing_base <- traffic_series(d, as.Date("2023-02-01"), as.Date("2024-03-01"), "index")
-stopifnot(all(is.na(missing_base$Verdi)))
 stopifnot(identical(month_date("2024M02"), as.Date("2024-02-01")))
 rolling <- data.frame(Flyplass = rep(c("A", "B"), each = 14),
   Dato = rep(seq(as.Date("2023-01-01"), by = "month", length.out = 14), 2),
