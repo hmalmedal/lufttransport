@@ -13,8 +13,21 @@ shiny::testServer(server, {
   session$setInputs(fetch = 1)
   session$setInputs(start = "2023-01-01", end = "2024-01-01")
   stopifnot(nrow(displayed()) == 4, !is.null(output$plot))
+  stopifnot(nrow(kpi_data()) == 8,
+    identical(kpi_data()$Verdi[kpi_data()$Visning == "count"], c(120, 100)), !is.null(output$kpis))
+  session$setInputs(end = "2023-01-01")
+  stopifnot(identical(kpi_data()$Verdi[kpi_data()$Visning == "count"], c(100, 80)))
+  session$setInputs(end = "2023-02-01")
+  stopifnot(nrow(kpi_data()) == 8, all(is.na(kpi_data()$Verdi)),
+    grepl("Ikke tilgjengelig", output$kpis$html))
+  session$setInputs(end = "2024-01-01")
   session$setInputs(mode = "yoy", start = "2024-01-01")
   stopifnot(isTRUE(all.equal(displayed()$Verdi, c(20, 25))))
+  stopifnot(isTRUE(all.equal(kpi_data()$Verdi[kpi_data()$Visning == "yoy"], c(20, 25))),
+    grepl("20,0 %", output$kpis$html))
+  before <- kpi_data()
+  session$setInputs(mode = "change12")
+  stopifnot(identical(kpi_data(), before))
   session$setInputs(airports = "ENGM")
   stopifnot(grepl("Valgene er endret", output$status))
 })

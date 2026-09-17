@@ -28,6 +28,7 @@ ui <- fluidPage(
       div(class = "status-panel", role = "status", textOutput("status")),
       tabsetPanel(
         tabPanel("Utvikling", plotOutput("plot", height = "510px"), textOutput("explanation")),
+        tabPanel("Nøkkeltall", uiOutput("kpis")),
         tabPanel("Datatabell", p("Manglende observasjoner vises som NA."),
           div(class = "table-scroll", tableOutput("table"))),
         tabPanel("Om tallene",
@@ -123,6 +124,45 @@ server <- function(input, output, session) {
   axis_title <- reactive(switch(input$mode, count = "Passasjerer",
     yoy = "Endring fra året før (%)", sum12 = "Passasjerer (12 måneders sum)",
     change12 = "Rullerende 12-måneders endring (%)"))
+  kpi_data <- reactive({
+    req(loaded(), input$end)
+    # Bruk nøyaktig valgt sluttmåned, også når en flyplass mangler tall.
+    end <- as.Date(input$end)
+    purrr::map(c("count", "yoy", "sum12", "change12"), function(mode) {
+      values <- traffic_series(loaded()$data, end, end, mode) |>
+        dplyr::select(Flyplass, Verdi)
+      loaded()$data |>
+        dplyr::distinct(Flyplass) |>
+        dplyr::left_join(values, by = "Flyplass") |>
+        dplyr::mutate(Visning = mode)
+    }) |>
+      dplyr::bind_rows()
+  })
+  output$kpis <- renderUI({
+    d <- kpi_data()
+    labels <- c(count = "Antall passasjerer", yoy = "Endring fra samme måned året før",
+      sum12 = "12 måneders glidende sum", change12 = "Rullerende 12-måneders endring")
+    tags$section(class = "kpi-section", `aria-label` = "Nøkkeltall for valgt sluttmåned",
+      h2(class = "section-title", paste("Nøkkeltall ·", format(as.Date(input$end), "%Y-%m"))),
+      p(class = "kpi-note", "Alle fire verdier gjelder Til måned og er uavhengige av valgt grafvisning. Ikke tilgjengelig betyr at tall eller beregningsgrunnlag mangler."),
+      div(class = "kpi-grid", purrr::map(unique(d$Flyplass), function(airport) {
+        values <- dplyr::filter(d, Flyplass == airport)
+        tags$article(class = "kpi-card",
+          h3(class = "kpi-airport", airport),
+          tags$dl(class = "kpi-metrics", purrr::map(seq_len(nrow(values)), function(i) {
+            percentage <- values$Visning[i] %in% c("yoy", "change12")
+            number <- scales::label_number(accuracy = if (percentage) 0.1 else 1,
+              big.mark = " ", decimal.mark = ",", suffix = if (percentage) " %" else "")
+            tagList(
+              tags$dt(class = "kpi-label", labels[[values$Visning[i]]]),
+              tags$dd(class = "kpi-value", if (is.finite(values$Verdi[i]))
+                number(values$Verdi[i]) else "Ikke tilgjengelig")
+            )
+          }))
+        )
+      }))
+    )
+  })
   output$plot <- renderPlot({
     d <- displayed()
     validate(need(any(is.finite(d$Verdi)), "Ingen beregnbare verdier for valget. Prøv en annen periode eller visning."))
