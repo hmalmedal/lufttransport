@@ -1,60 +1,27 @@
-ssb_url <- "https://data.ssb.no/api/pxwebapi/v2/tables/08507/"
-
-ssb_normalize_metadata <- function(raw) {
-  # JSON-stat2 har koder og etiketter i dimension/category.
-  # Sorter etter indeksverdiene, ikke rekkefølgen på JSON-objektnøklene.
-  variables <- purrr::map(raw$id, function(code) {
-    dimension <- raw$dimension[[code]]
-    index <- unlist(dimension$category$index)
-    values <- if (is.null(names(index))) index else names(index)[order(index)]
-    labels <- unlist(dimension$category$label)[values]
-    list(code = code, text = dimension$label, values = unname(values),
-      valueTexts = unname(labels))
-  })
-  list(title = raw$label, variables = variables)
-}
-
 ssb_metadata <- function() {
-  httr2::url_modify_relative(ssb_url, "metadata") |>
-    httr2::request() |>
-    httr2::req_url_query(lang = "no") |>
-    httr2::req_timeout(45) |>
-    httr2::req_perform() |>
-    httr2::resp_body_json(simplifyVector = FALSE) |>
-    ssb_normalize_metadata()
-}
-
-ssb_variable <- function(metadata, code) {
-  purrr::detect(metadata$variables, ~ identical(.x$code, code))
+  metadata <- httr::with_config(httr::timeout(45),
+    PxWebApiData::meta_frames("08507"))
+  if (is.null(metadata)) stop("SSB returnerte ingen metadata.", call. = FALSE)
+  metadata
 }
 
 ssb_choices <- function(metadata, code) {
-  variable <- ssb_variable(metadata, code)
-  purrr::set_names(unlist(variable$values), unlist(variable$valueTexts))
+  variable <- metadata[[code]]
+  stats::setNames(variable$code, variable$label)
 }
 
 month_date <- function(x) as.Date(paste0(sub("M", "-", x), "-01"))
 
 ssb_fetch <- function(metadata, airports, traffic, route, passengers) {
-  selections <- list(
+  # Gjenbruk metadata og behold dimensjonskodene uavhengig av etikettene.
+  raw <- httr::with_config(httr::timeout(90), PxWebApiData::api_data_2(metadata,
     Lufthavn = airports, TrafikkType = traffic, TrafikkFly = route,
-    PassasjerType = passengers, ContentsCode = "Passasjerer",
-    Tid = unlist(ssb_variable(metadata, "Tid")$values)
-  )
-  query <- selections |>
-    purrr::imap(~ list(variableCode = .y, valueCodes = unname(as.list(.x)))) |>
-    unname()
-  response <- httr2::url_modify_relative(ssb_url, "data") |>
-    httr2::request() |>
-    httr2::req_url_query(lang = "no", outputFormat = "json-stat2") |>
-    httr2::req_body_json(list(selection = query)) |>
-    httr2::req_timeout(90) |>
-    httr2::req_perform()
-  # Behold dimensjonskodene slik at endrede etiketter ikke knekker appen.
-  raw <- response |>
-    httr2::resp_body_string(encoding = "UTF-8") |>
-    rjstat::fromJSONstat(naming = "id")
-  stopifnot(all(c("Lufthavn", "Tid", "value") %in% names(raw)))
+    PassasjerType = passengers, ContentsCode = "Passasjerer", Tid = "*"))
+  if (is.null(raw)) stop("SSB returnerte ingen passasjertall.", call. = FALSE)
+  if (!all(c("Lufthavn", "Tid", "value") %in% names(raw))) {
+    stop("SSB returnerte et uventet dataformat.", call. = FALSE)
+  }
+  comment(raw) <- NULL
   choices <- ssb_choices(metadata, "Lufthavn")
   airports <- tibble::enframe(choices, name = "Flyplass", value = "Lufthavn")
   raw |>

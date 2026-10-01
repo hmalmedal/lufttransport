@@ -7,7 +7,7 @@ Shiny-app for sammenligning av månedlige passasjertall fra [SSB tabell 08507](h
 Åpne `lufttransport.Rproj` i RStudio. Installer pakkene én gang:
 
 ```r
-install.packages(c("shiny", "rjstat", "httr2", "ggplot2", "scales",
+install.packages(c("shiny", "PxWebApiData", "httr", "ggplot2", "scales",
                    "dplyr", "tidyr", "purrr", "tibble", "readr"))
 ```
 
@@ -23,9 +23,9 @@ Velg flyplasser og trafikkavgrensning, og trykk **Hent passasjertall**. Velg der
 
 Appen trenger internettilgang til `https://data.ssb.no`. Metadata hentes ved oppstart og kan oppdateres med egen knapp. Passasjertall hentes ved knappetrykk og holdes i minnet per økt. Endring av periode eller visning utløser ikke nye API-kall. Hele tidsserien hentes for valgte flyplasser, slik at årsvekst også kan beregnes ved starten av visningsperioden.
 
-Appen bruker [PxWebApi v2](https://www.ssb.no/api/pxwebapiv2). Metadata hentes med GET fra `https://data.ssb.no/api/pxwebapi/v2/tables/08507/metadata?lang=no`. JSON-stat2-dimensjonene omformes til flyplassvalg, kategorier og tilgjengelige måneder i appen.
+Appen bruker [PxWebApiData](https://cran.r-project.org/package=PxWebApiData) (versjon 2.0.0 eller nyere) mot SSBs [PxWebApi v2](https://www.ssb.no/api/pxwebapiv2). `meta_frames("08507")` henter norske metadata som brukes til flyplassvalg og trafikkategorier.
 
-`httr2` sender POST til `https://data.ssb.no/api/pxwebapi/v2/tables/08507/data?lang=no&outputFormat=json-stat2`, med `selection`, `variableCode` og `valueCodes` i forespørselen. Alle dimensjoner velges eksplisitt, med én kategori per trafikkdimensjon. `rjstat::fromJSONstat()` konverterer JSON-stat2-svaret til en dataramme.
+`api_data_2()` gjenbruker metadataene og henter data med GET. Alle dimensjoner velges eksplisitt, med én kategori per trafikkdimensjon og `Tid = "*"` for hele tidsserien. Pakken returnerer en dataramme med stabile dimensjonskoder; appen kobler på flyplassnavn og konverterer måneder til datoer. `httr::with_config()` setter tidsavbrudd på 45 sekunder for metadata og 90 sekunder for data. Tomme svar (`NULL`) behandles som feil og vises i appens feilmeldinger.
 
 Tallene er ikke sesongjustert og måler ikke unike reisende. Manglende verdier blir ikke erstattet med null. Årsvekst krever en positiv verdi i samme måned året før.
 

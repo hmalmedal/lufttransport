@@ -1,13 +1,8 @@
 source("R/ssb.R", encoding = "UTF-8")
-# JSON-objektnøkler kan komme i annen rekkefølge enn kategoriindeksen.
-metadata_fixture <- list(label = "Test", id = list("Lufthavn"), dimension = list(
-  Lufthavn = list(label = "Flyplass", category = list(
-    index = list(ENBR = 1L, ENGM = 0L),
-    label = list(ENBR = "Bergen", ENGM = "Oslo")))))
-stopifnot(identical(ssb_choices(ssb_normalize_metadata(metadata_fixture), "Lufthavn"),
-  c(Oslo = "ENGM", Bergen = "ENBR")))
-metadata_fixture$dimension$Lufthavn$category$index <- list("ENGM", "ENBR")
-stopifnot(identical(ssb_choices(ssb_normalize_metadata(metadata_fixture), "Lufthavn"),
+# Metadataformatet fra PxWebApiData::meta_frames().
+metadata_fixture <- list(Lufthavn = data.frame(
+  code = c("ENGM", "ENBR"), index = 0:1, label = c("Oslo", "Bergen")))
+stopifnot(identical(ssb_choices(metadata_fixture, "Lufthavn"),
   c(Oslo = "ENGM", Bergen = "ENBR")))
 d <- data.frame(Flyplass = c("A", "A", "A", "B", "B"),
   Dato = as.Date(c("2023-01-01", "2024-01-01", "2024-03-01", "2023-01-01", "2024-01-01")),
@@ -49,7 +44,7 @@ stopifnot(is.na(change(comparison)$Verdi[24]))
 if (identical(Sys.getenv("TEST_SSB_LIVE"), "true")) {
   m <- ssb_metadata()
   live <- ssb_fetch(m, c("ENGM", "ENBR"), "000", "IU", "AAT")
-  stopifnot(nrow(live) == 2 * length(ssb_variable(m, "Tid")$values),
+  stopifnot(nrow(live) == 2 * nrow(m$Tid),
     length(unique(live$Flyplass)) == 2, any(live$Passasjerer > 0, na.rm = TRUE),
     !anyDuplicated(live[c("Flyplass", "Dato")]))
   cat("SSB-integrasjon OK:", nrow(live), "observasjoner\n")

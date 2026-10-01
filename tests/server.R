@@ -15,11 +15,11 @@ stopifnot(
   identical(kpi_direction(NA_real_), "missing"),
   identical(kpi_month("2026-09-01"), "september 2026")
 )
-variable <- function(code, values) list(code = code, values = as.list(values), valueTexts = as.list(values))
-ssb_metadata <- function() list(variables = list(
-  variable("Lufthavn", c("ENGM", "ENBR")), variable("TrafikkType", "000"),
-  variable("TrafikkFly", "IU"), variable("PassasjerType", "AAT"),
-  variable("Tid", c("2023M01", "2024M01"))))
+variable <- function(values) data.frame(code = values, label = values)
+ssb_metadata <- function() list(
+  Lufthavn = variable(c("ENGM", "ENBR")), TrafikkType = variable("000"),
+  TrafikkFly = variable("IU"), PassasjerType = variable("AAT"),
+  Tid = variable(c("2023M01", "2024M01")))
 ssb_fetch <- function(...) data.frame(Flyplass = rep(c("Oslo", "Bergen"), each = 2),
   Dato = rep(as.Date(c("2023-01-01", "2024-01-01")), 2), Passasjerer = c(100, 120, 80, 100))
 shiny::testServer(server, {
